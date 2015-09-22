@@ -5,8 +5,8 @@ from words import text_to_list
 import os
 class Learn(Mode):
 	def read_from_dir(self,dirname):
+		fcontents=''
 		for dpath,dnames,fnames in os.walk(dirname):
-			fcontents=''
 			for f in fnames:
 				fcontents+=open(os.path.join(dpath, f), 'r').read()
 		return fcontents
