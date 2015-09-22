@@ -2,11 +2,49 @@ from __future__ import division
 from mode import Mode
 from db import Db
 from words import text_to_list
-
+import operator
+import pdb
 class Classify(Mode):
 	MIN_WORD_COUNT = 5
 	RARE_WORD_PROB = 0.5
 	EXCLUSIVE_WORD_PROB = 0.99
+
+	def top_100_words(self,words,db):
+		pl={}
+		# db=Db()
+		for word in words:
+			spamicity=self.p_for_word(db,word)
+			if(spamicity>0.45 and spamicity<0.55):
+				continue
+			# elif(self.wc_doctype_1(word,db)+self.wc_doctype_2(word,db)<100):
+			# 	continue
+			else:
+				p1 = self.wc_doctype_1(word,db)/self.doctype1_word_count
+				p2 = self.wc_doctype_2(word,db)/self.doctype2_word_count
+				pl[word]=abs(p1-p2)
+		if(len(pl)):
+			sorted_pl=sorted(pl.items(), key=operator.itemgetter(1),reverse=True)
+			# sorted_pl=sorted_pl.reverse()
+			w=[]
+			ct=0
+			for k in sorted_pl:
+				if(ct>=100):
+					break
+				w.append(k[0])
+				ct+=1
+			pdb.set_trace()
+			return w
+		else:
+			return words
+
+	def wc_doctype_1(self,word,db):
+		return db.get_word_count(self.doctype1, word)
+
+	def wc_doctype_2(self,word,db):
+		return db.get_word_count(self.doctype2, word)
+
+	def get_total_wc(self):
+		return self.doctype1_word_count + self.doctype2_word_count
 
 	def set_text(self, text):
 		words = text_to_list(text)
@@ -84,6 +122,7 @@ class Classify(Mode):
 		self.doctype1_word_count = db.get_words_count(self.doctype1)
 		self.doctype2_word_count = db.get_words_count(self.doctype2)
 
+		self.words=self.top_100_words(self.words,db)
 		for word in self.words:
 			p = self.p_for_word(db, word)
 			pl.append(p)
